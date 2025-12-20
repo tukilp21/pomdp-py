@@ -32,8 +32,7 @@ class MosAgent(pomdp_py.Agent):
         self._object_ids = object_ids
         self.sensor = sensor
 
-        # since the robot observes its own pose perfectly, it will have 100% prior
-        # on this pose.
+        # since the robot observes its own pose perfectly, it will have 100% prior on this pose.
         prior[robot_id] = {init_robot_state.pose: 1.0}
         rth = init_robot_state.pose[2]
 

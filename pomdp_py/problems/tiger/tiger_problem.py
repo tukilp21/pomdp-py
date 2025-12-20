@@ -41,7 +41,15 @@ import numpy as np
 import sys
 import copy
 
+'''
+NOTE: 
+2 states, 2 actions, and 2 observations
 
+'''
+
+#################################################
+# DOMAIN
+#################################################
 class TigerState(pomdp_py.State):
     def __init__(self, name):
         self.name = name
@@ -104,6 +112,9 @@ class TigerObservation(pomdp_py.Observation):
     def __repr__(self):
         return "TigerObservation(%s)" % self.name
 
+##################################################
+# MODELS
+##################################################
 
 # Observation model
 class ObservationModel(pomdp_py.ObservationModel):
@@ -111,6 +122,7 @@ class ObservationModel(pomdp_py.ObservationModel):
         self.noise = noise
 
     def probability(self, observation, next_state, action):
+        '''Returns P(observation | next_state, action)'''
         if action.name == "listen":
             # heard the correct growl
             if observation.name == next_state.name:
@@ -121,6 +133,7 @@ class ObservationModel(pomdp_py.ObservationModel):
             return 0.5
 
     def sample(self, next_state, action):
+        '''Returns observation randomly sampled according to the distribution of this observation model'''
         if action.name == "listen":
             thresh = 1.0 - self.noise
         else:
@@ -132,7 +145,7 @@ class ObservationModel(pomdp_py.ObservationModel):
             return TigerObservation(next_state.other().name)
 
     def get_all_observations(self):
-        """Only need to implement this if you're using
+        """NOTE: Only need to implement this if you're using
         a solver that needs to enumerate over the observation space
         (e.g. value iteration)"""
         return [TigerObservation(s) for s in {"tiger-left", "tiger-right"}]
@@ -144,8 +157,9 @@ class TransitionModel(pomdp_py.TransitionModel):
         """According to problem spec, the world resets once
         action is open-left/open-right. Otherwise, stays the same"""
         if action.name.startswith("open"):
-            return 0.5
-        else:
+            return 0.5 # tiger randomly appears behind left or right door with equal probability (50/50) 
+        
+        else: # listen action, the state does not change
             if next_state.name == state.name:
                 return 1.0 - 1e-9
             else:
@@ -188,11 +202,19 @@ class RewardModel(pomdp_py.RewardModel):
 # Policy Model
 class PolicyModel(pomdp_py.RolloutPolicy):
     """A simple policy model with uniform prior over a
-    small, finite action space"""
+    small, finite action space
+    
+    (1) determine the set of actions that the robot can take at given state (and/or history)
+    (e.g., pi(a|s) or pi(a|h) )
 
-    ACTIONS = [TigerAction(s) for s in {"open-left", "open-right", "listen"}]
+    (2) sample an action from the set according to some distribution
+    
+    """
+
+    ACTIONS = [TigerAction(s) for s in {"open-left", "open-right", "listen"}] # instantiate all possible actions
 
     def sample(self, state):
+        '''Pick an action uniformly'''
         return random.sample(self.get_all_actions(), 1)[0]
 
     def rollout(self, state, history=None):
@@ -202,6 +224,11 @@ class PolicyModel(pomdp_py.RolloutPolicy):
     def get_all_actions(self, state=None, history=None):
         return PolicyModel.ACTIONS
 
+
+##################################################
+# define POMDP
+#   - define Agent & ENV.
+##################################################
 
 class TigerProblem(pomdp_py.POMDP):
     """
@@ -220,8 +247,13 @@ class TigerProblem(pomdp_py.POMDP):
             RewardModel(),
         )
         env = pomdp_py.Environment(init_true_state, TransitionModel(), RewardModel())
+
         super().__init__(agent, env, name="TigerProblem")
 
+
+    '''
+    NOTE: factory method (alternative constructor) that provides a simpler
+    '''
     @staticmethod
     def create(state="tiger-left", belief=0.5, obs_noise=0.15):
         """
@@ -241,6 +273,25 @@ class TigerProblem(pomdp_py.POMDP):
         tiger_problem.agent.set_belief(init_belief, prior=True)
         return tiger_problem
 
+
+def make_tiger(noise=0.15, init_state="tiger-left", init_belief=[0.5, 0.5]):
+    """Convenient function to quickly build a tiger domain.
+    Useful for testing"""
+    tiger = TigerProblem(
+        noise,
+        TigerState(init_state),
+        pomdp_py.Histogram(
+            {
+                TigerState("tiger-left"): init_belief[0],
+                TigerState("tiger-right"): init_belief[1],
+            }
+        ),
+    )
+    return tiger
+
+##################################################
+# PLANNER
+##################################################
 
 def test_planner(tiger_problem, planner, nsteps=3, debug_tree=False):
     """
@@ -313,22 +364,6 @@ def test_planner(tiger_problem, planner, nsteps=3, debug_tree=False):
             # Make it clearer to see what actions are taken
             # until every time door is opened.
             print("\n")
-
-
-def make_tiger(noise=0.15, init_state="tiger-left", init_belief=[0.5, 0.5]):
-    """Convenient function to quickly build a tiger domain.
-    Useful for testing"""
-    tiger = TigerProblem(
-        noise,
-        TigerState(init_state),
-        pomdp_py.Histogram(
-            {
-                TigerState("tiger-left"): init_belief[0],
-                TigerState("tiger-right"): init_belief[1],
-            }
-        ),
-    )
-    return tiger
 
 
 def main():

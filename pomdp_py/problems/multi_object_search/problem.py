@@ -58,10 +58,7 @@ class MosOOPOMDP(pomdp_py.OOPOMDP):
                 For example: {'r': 'laser fov=90 min_range=1 max_range=5
                                     angle_increment=5'}
                 Ignored if env is not None
-            agent_has_map (bool): If True, we assume the agent is given the occupancy
-                                  grid map of the world. Then, the agent can use this
-                                  map to avoid planning invalid actions (bumping into things).
-                                  But this map does not help the agent's prior belief directly.
+            agent_has_map (bool): If True, we assume the agent is given the occupancy grid map of the world. Then, the agent can use this map to avoid planning invalid actions (bumping into things). But this map does not help the agent's prior belief directly.
 
             sigma, epsilon: observation model paramters
             belief_rep (str): belief representation. Either histogram or particles.
@@ -311,6 +308,9 @@ def solve(
             )
             viz.on_loop()
             viz.on_render()
+            time.sleep(0.2)
+        
+
 
         # Termination check
         if (
@@ -318,21 +318,35 @@ def solve(
             == problem.env.target_objects
         ):
             print("Done!")
+            input("Press Enter to continue...")
             break
         if _find_actions_count >= len(problem.env.target_objects):
             print("FindAction limit reached.")
+            input("Press Enter to continue...")
             break
         if _time_used > max_time:
             print("Maximum time reached.")
+            input("Press Enter to continue...")
             break
 
 
 # Test
 def unittest():
-    # random world
-    grid_map, robot_char = random_world(10, 10, 5, 10)
-    laserstr = make_laser_sensor(90, (1, 4), 0.5, False)
-    proxstr = make_proximity_sensor(4, False)
+    # create the world
+    grid_map, robot_char = random_world(10, 10, 5, 10) # random world
+
+    from pomdp_py.problems.multi_object_search.example_worlds import world1, world2, world3
+    '''NOTE:
+    world 2: Used to test the shape of the sensor
+    world 3: Used to test sensor occlusion
+    '''
+    
+    grid_map, robot_char = world3
+
+    # define sensor
+    laserstr = make_laser_sensor(90, (1, 4), 0.5, True)
+    proxstr = make_proximity_sensor(3, True)
+    
     problem = MosOOPOMDP(
         robot_char,  # r is the robot character
         sigma=0.05,  # observation model parameter
