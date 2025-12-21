@@ -24,6 +24,7 @@ import numpy as np
 from pomdp_py.problems.multi_object_search.domain.state import *
 from pomdp_py.problems.multi_object_search.domain.action import *
 from pomdp_py.problems.multi_object_search.domain.observation import *
+from pomdp_py.problems.multi_object_search.env.env import MosEnvironment
 
 
 #### Observation Models ####
@@ -202,7 +203,7 @@ class ObjectObservationModel(pomdp_py.ObservationModel):
 
 ### Unit test ###
 def unittest():
-    from ..env.env import (
+    from pomdp_py.problems.multi_object_search.env.env import (
         make_laser_sensor,
         make_proximity_sensor,
         equip_sensors,
@@ -225,7 +226,9 @@ def unittest():
     # 0123456789
     # 10 x 8
     worldstr = equip_sensors(worldmap, {"r": make_laser_sensor(90, (1, 5), 0.5, False)})
-    env = interpret(worldstr)
+    dim, robots, objects, obstacles, sensors = interpret(worldstr)
+    init_state = MosOOState({**objects, **robots})
+    env = MosEnvironment(dim, init_state, sensors, obstacles=obstacles)
     robot_id = interpret_robot_id("r")
     robot_pose = env.state.pose(robot_id)
 

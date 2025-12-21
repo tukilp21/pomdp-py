@@ -38,9 +38,11 @@ class MosOOPOMDP(pomdp_py.OOPOMDP):
         sensors=None,
         sigma=0.01,
         epsilon=1,
+        # init belief
         belief_rep="histogram",
         prior={},
         num_particles=100,
+
         agent_has_map=False,
     ):
         """
@@ -58,13 +60,17 @@ class MosOOPOMDP(pomdp_py.OOPOMDP):
                 For example: {'r': 'laser fov=90 min_range=1 max_range=5
                                     angle_increment=5'}
                 Ignored if env is not None
+
             agent_has_map (bool): If True, we assume the agent is given the occupancy grid map of the world. Then, the agent can use this map to avoid planning invalid actions (bumping into things). But this map does not help the agent's prior belief directly.
 
             sigma, epsilon: observation model paramters
+
             belief_rep (str): belief representation. Either histogram or particles.
+
             prior (dict or str): either a dictionary as defined in agent/belief.py
                 or a string, either "uniform" or "informed". For "uniform", a uniform
                 prior will be given. For "informed", a perfect prior will be given.
+
             num_particles (int): setting for the particle belief representation
         """
         if env is None:
@@ -153,9 +159,13 @@ def belief_update(agent, real_action, real_observation, next_robot_state, planne
                     # set of pixels (2D) or voxels (3D). Note the real
                     # observation, oi, is most likely sampled from O(oi|s',a)
                     # because real world considers the occlusion between objects
-                    # (due to full state s'). The problem is how to compute the
+                    # (due to full state s'). 
+                    # 
+                    # The problem is how to compute the
                     # probability of this oi given s' and a, where it's
-                    # intractable to obtain s'. To this end, we can make a
+                    # intractable to obtain s'. 
+                    # 
+                    # To this end, we can make a
                     # simplifying assumption that an object is contained within
                     # one pixel (or voxel); The pixel (or voxel) is labeled to
                     # indicate free space or object. The label of each pixel or
@@ -308,7 +318,11 @@ def solve(
             )
             viz.on_loop()
             viz.on_render()
-            time.sleep(0.2)
+            # time.sleep(0.2)
+
+            if str(real_action) == "look" or str(real_action).startswith("find"):
+                # time.sleep(1.0)  # pause to show the found object
+                input("Press Enter to continue...")
         
 
 
@@ -320,10 +334,10 @@ def solve(
             print("Done!")
             input("Press Enter to continue...")
             break
-        if _find_actions_count >= len(problem.env.target_objects):
-            print("FindAction limit reached.")
-            input("Press Enter to continue...")
-            break
+        # if _find_actions_count >= len(problem.env.target_objects):
+        #     print("FindAction limit reached.")
+        #     input("Press Enter to continue...")
+        #     break
         if _time_used > max_time:
             print("Maximum time reached.")
             input("Press Enter to continue...")
@@ -337,24 +351,36 @@ def unittest():
 
     from pomdp_py.problems.multi_object_search.example_worlds import world1, world2, world3
     '''NOTE:
+    world 1: 
     world 2: Used to test the shape of the sensor
     world 3: Used to test sensor occlusion
     '''
     
-    grid_map, robot_char = world3
+    grid_map, robot_char = world1
 
     # define sensor
-    # laserstr = make_laser_sensor(90, (1, 4), 0.5, True)
-    proxstr = make_proximity_sensor(3, True)
+    '''
+    laser:
+        - FOV: configurable
+        - directional
+    proximity:
+        - omnidirectional
+    '''
+    # laserstr = make_laser_sensor(90, (1, 4), 0.05, True)
+    proxstr = make_proximity_sensor(2, False)
     
     problem = MosOOPOMDP(
         robot_char,  # r is the robot character
         sigma=0.05,  # observation model parameter
         epsilon=0.95,  # observation model parameter
         grid_map=grid_map,
+
         sensors={robot_char: proxstr},
+        # prior="informed",
         prior="uniform",
-        agent_has_map=True,
+
+
+        agent_has_map=False, # <-- help the agent avoid collision, but no Penalty applied yet
     )
     solve(
         problem,

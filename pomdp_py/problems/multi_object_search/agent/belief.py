@@ -52,13 +52,18 @@ def initialize_belief(
         dim (tuple): a tuple (width, length) of the search space gridworld.
         robot_id (int): robot id that this belief is initialized for.
         object_ids (dict): a set of object ids that we want to model the belief distribution
-                          over; They are `assumed` to be the target objects, not obstacles,
-                          because the robot doesn't really care about obstacle locations and
-                          modeling them just adds computation cost.
-        prior (dict): A mapping {(objid|robot_id) -> {(x,y) -> [0,1]}}. If used, then
+                    over; They are `assumed` to be the target objects, not obstacles,
+                    because the robot doesn't really care about obstacle locations and
+                    modeling them just adds computation cost.
+        prior (dict): A mapping {(objid|robot_id) -> {(x,y) -> [0,1]}}. 
+            For example: 
+                {robot_id: {(2, 3, 0): 1.0},        --> full confidence
+                objA: {(1, 1): 0.7, (4, 2): 0.3},   --> belief over 2 loc
+                objB: {(0, 0): 0.5, (0, 1): 0.5}}
+            If used, then
                       all locations not included in the prior will be treated to have 0 probability.
-                      If unspecified for an object, then the belief over that object is assumed
-                      to be a uniform distribution.
+                      If unspecified for an object, then the belief over that object is assumed to be a uniform distribution.
+
         robot_orientations (dict): Mapping from robot id to their initial orientation (radian).
                                    Assumed to be 0 if robot id not in this dictionary.
         num_particles (int): Maximum number of particles used to represent the belief
@@ -81,6 +86,14 @@ def initialize_belief(
 def _initialize_histogram_belief(dim, robot_id, object_ids, prior, robot_orientations):
     """
     Returns the belief distribution represented as a histogram
+    - start from a prior if provided; otherwise
+    - uniform distribution across the whole gridworld
+
+    Instead of one giant joint distribution over all objects' positions (which would be 49^n states for n objects), this maintains factored beliefs - one distribution per object. 
+        - this is defined in the last line
+
+    Pros and Cons:
+    - Pros: Exact and simple; Cons: Can be large if the grid is big (stores every cell).
     """
     oo_hists = {}  # objid -> Histogram
     width, length = dim
@@ -128,10 +141,13 @@ def _initialize_particles_belief(
     Since it is very difficult to provide a prior knowledge over the joint state
     space when the number of objects scales, the prior (which is
     object-oriented), is used to create particles separately for each object to
-    satisfy the prior; That is, particles beliefs are generated for each object
+    satisfy the prior; 
+    That is, particles beliefs are generated for each object
     as if object_oriented=True. Then, `num_particles` number of particles with
     joint state is sampled randomly from these particle beliefs.
 
+    Pros and Cons:
+    - Pros: Scales better when the gridworld is large; Cons: Approximate.
     """
     # For the robot, we assume it can observe its own state;
     # Its pose must have been provided in the `prior`.
