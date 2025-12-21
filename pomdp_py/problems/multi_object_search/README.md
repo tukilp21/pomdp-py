@@ -14,7 +14,7 @@
 
 # Bug 
 
-# To fix / add
+## To fix / add
 - sensor define with *occlusion True* but still looks through wall (tested on world 1, the agent chooses *look* east from the start). from Coplit:
     - Obstacles are NOT included in sensor observation?? check `env.env`
     - `models/components/sensor.py` line 224-251, 211-221
@@ -33,7 +33,7 @@ Objective: Find the (x, y) location of **n** target object
 
 Solver: POUCT - not the original OO_POMCP
 
-# POMDP Problem Structure
+## POMDP Problem Structure
 
 State:
 - robot state
