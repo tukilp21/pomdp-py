@@ -344,7 +344,7 @@ def unittest():
     grid_map, robot_char = world3
 
     # define sensor
-    laserstr = make_laser_sensor(90, (1, 4), 0.5, True)
+    # laserstr = make_laser_sensor(90, (1, 4), 0.5, True)
     proxstr = make_proximity_sensor(3, True)
     
     problem = MosOOPOMDP(

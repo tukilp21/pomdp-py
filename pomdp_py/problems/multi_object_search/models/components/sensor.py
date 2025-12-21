@@ -154,35 +154,78 @@ class Laser2DSensor:
             and round(bearing, 2) in self._beams
         )
 
-    def _build_beam_map(self, beam, point, beam_map={}):
-        """beam_map (dict): Maps from bearing to (dist, point)"""
+    # def _build_beam_map(self, beam, point, beam_map={}):
+    #     """beam_map (dict): Maps from bearing to (dist, point)"""
+    #     dist, bearing = beam
+    #     valid = self.valid_beam(dist, bearing)
+    #     if not valid:
+    #         return
+    #     bearing_key = round(bearing, 2)
+    #     if bearing_key in beam_map:
+    #         # There's an object covered by this beame already.
+    #         # see if this beame is closer
+    #         if dist < beam_map[bearing_key][0]:
+    #             # point is closer; Update beam map
+    #             print("HEY")
+    #             beam_map[bearing_key] = (dist, point)
+    #         else:
+    #             # point is farther than current hit
+    #             pass
+    #     else:
+    #         beam_map[bearing_key] = (dist, point)
+
+    # def observe(self, robot_pose, env_state):
+    #     """
+    #     Returns a MosObservation with this sensor model.
+    #     """
+    #     rx, ry, rth = robot_pose
+
+    #     # Check every object
+    #     objposes = {}
+    #     beam_map = {}
+    #     for objid in env_state.object_states:
+    #         objposes[objid] = ObjectObservation.NULL
+    #         object_pose = env_state.object_states[objid]["pose"]
+    #         beam = self.shoot_beam(robot_pose, object_pose)
+
+    #         if not self._occlusion_enabled:
+    #             if self.valid_beam(*beam):
+    #                 d, bearing = beam  # distance, bearing
+    #                 lx = rx + int(round(d * math.cos(rth + bearing)))
+    #                 ly = ry + int(round(d * math.sin(rth + bearing)))
+    #                 objposes[objid] = (lx, ly)
+    #         else:
+    #             self._build_beam_map(beam, object_pose, beam_map=beam_map)
+
+    #     if self._occlusion_enabled:
+    #         # The observed objects are in the beam_map
+    #         for bearing_key in beam_map:
+    #             d, objid = beam_map[bearing_key]
+    #             lx = rx + int(round(d * math.cos(rth + bearing_key)))
+    #             ly = ry + int(round(d * math.sin(rth + bearing_key)))
+    #             objposes[objid] = (lx, ly)
+
+    #     return MosOOObservation(objposes)
+
+    def _build_beam_map(self, beam, point, objid, beam_map={}):
+        """beam_map (dict): Maps from bearing to (dist, objid)"""
         dist, bearing = beam
         valid = self.valid_beam(dist, bearing)
         if not valid:
             return
         bearing_key = round(bearing, 2)
         if bearing_key in beam_map:
-            # There's an object covered by this beame already.
-            # see if this beame is closer
             if dist < beam_map[bearing_key][0]:
-                # point is closer; Update beam map
-                print("HEY")
-                beam_map[bearing_key] = (dist, point)
-            else:
-                # point is farther than current hit
-                pass
+                beam_map[bearing_key] = (dist, objid)
         else:
-            beam_map[bearing_key] = (dist, point)
+            beam_map[bearing_key] = (dist, objid)
 
     def observe(self, robot_pose, env_state):
-        """
-        Returns a MosObservation with this sensor model.
-        """
+        """Returns a MosObservation with this sensor model."""
         rx, ry, rth = robot_pose
-
-        # Check every object
         objposes = {}
         beam_map = {}
+        
         for objid in env_state.object_states:
             objposes[objid] = ObjectObservation.NULL
             object_pose = env_state.object_states[objid]["pose"]
@@ -190,15 +233,14 @@ class Laser2DSensor:
 
             if not self._occlusion_enabled:
                 if self.valid_beam(*beam):
-                    d, bearing = beam  # distance, bearing
+                    d, bearing = beam
                     lx = rx + int(round(d * math.cos(rth + bearing)))
                     ly = ry + int(round(d * math.sin(rth + bearing)))
                     objposes[objid] = (lx, ly)
             else:
-                self._build_beam_map(beam, object_pose, beam_map=beam_map)
+                self._build_beam_map(beam, object_pose, objid, beam_map=beam_map)
 
         if self._occlusion_enabled:
-            # The observed objects are in the beam_map
             for bearing_key in beam_map:
                 d, objid = beam_map[bearing_key]
                 lx = rx + int(round(d * math.cos(rth + bearing_key)))
@@ -206,6 +248,7 @@ class Laser2DSensor:
                 objposes[objid] = (lx, ly)
 
         return MosOOObservation(objposes)
+
 
     @property
     def sensing_region_size(self):
