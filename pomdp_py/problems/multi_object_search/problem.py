@@ -380,7 +380,7 @@ def unittest():
         prior="uniform",
 
 
-        agent_has_map=False, # <-- help the agent avoid collision, but no Penalty applied yet
+        agent_has_map=True, # <-- help the agent avoid collision, but no Penalty applied yet
     )
     solve(
         problem,
