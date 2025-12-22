@@ -57,6 +57,7 @@ class StaticObjectTransitionModel(pomdp_py.TransitionModel):
     def __init__(self, objid, epsilon=1e-9):
         self._objid = objid
         self._epsilon = epsilon
+        # self.epsilon = 0.7
 
     def probability(self, next_object_state, state, action):
         if next_object_state != state.object_states[next_object_state["id"]]:
@@ -85,6 +86,7 @@ class RobotTransitionModel(pomdp_py.TransitionModel):
         self._robot_id = sensor.robot_id
         self._dim = dim
         self._epsilon = epsilon
+        
 
     @classmethod
     def if_move_by(cls, robot_id, state, action, dim, check_collision=True):

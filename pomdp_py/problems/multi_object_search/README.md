@@ -12,6 +12,8 @@
 1. `observation_model_py` looks complicated 
     - my intuition: to model/define, especially on in-domain simplifying assumption, so that belief update can be simply *bayesian update* (as stated in `agent/belief.py`)
 
+1. play around with `class StaticObjectTransitionModel(pomdp_py.TransitionModel)`
+
 # Bug 
 
 ## To fix / add
