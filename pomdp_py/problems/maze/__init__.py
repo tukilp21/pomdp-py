@@ -12,7 +12,41 @@ Problem originally introduced in `Solving POMDPs by Searching the Space of Finit
    :alt: Figure from the paper
 
    Maze POMDP
-
-
-**Not yet implemented**
 """
+
+from pomdp_py.problems.maze.problem import MazeProblem
+from pomdp_py.problems.maze.domain.state import State
+from pomdp_py.problems.maze.domain.action import (
+    MazeAction,
+    MoveNorth,
+    MoveSouth,
+    MoveEast,
+    MoveWest,
+    get_all_actions,
+)
+from pomdp_py.problems.maze.domain.observation import Observation, WALL_NAMES
+from pomdp_py.problems.maze.env.env import MazeEnvironment
+from pomdp_py.problems.maze.models.transition_model import TransitionModel
+from pomdp_py.problems.maze.models.observation_model import ObservationModel
+from pomdp_py.problems.maze.models.reward_model import RewardModel
+from pomdp_py.problems.maze.models.policy_model import PolicyModel
+from pomdp_py.problems.maze.models.components.map import MazeMap
+
+__all__ = [
+    "MazeProblem",
+    "State",
+    "MazeAction",
+    "MoveNorth",
+    "MoveSouth",
+    "MoveEast",
+    "MoveWest",
+    "get_all_actions",
+    "Observation",
+    "WALL_NAMES",
+    "MazeEnvironment",
+    "TransitionModel",
+    "ObservationModel",
+    "RewardModel",
+    "PolicyModel",
+    "MazeMap",
+]
