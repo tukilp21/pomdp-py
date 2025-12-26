@@ -37,24 +37,21 @@ Solver: POUCT - not the original OO_POMCP
 
 ## POMDP Problem Structure
 
-State:
-- robot state
-- env state: W x L grid world with
-    - labelled, either Obstacle or Target
-    - Free space
+### State space is W x L grid world, where s_t defined object-oriented state
+s = {robot_state, obj_1, obj_2, obj_3, obj_n}
 
-Action
+
+### Action
 - Motion
-    - default: scheme 3 (vx,vy)
-    - 
+    - by default: scheme 3 (vx,vy)
 - Look: Receive observation
 - Find
 
-Trasition model
+### Transition model
 - all action assumed to be deterministic
 - **STATIC** environment
 
-## Observation
+### Observation
 Defined in `env.env.py`
 
 - return example: ```MosOOObservation({4: None, 6: (9, 3), 9: None, 11: None, 12: None})```
