@@ -1,11 +1,12 @@
 # To do
+
 1. identify S,A,O,T,Z,R,b - then see which of these i will need to change to fit my problem
-    - 
+
 1. understand the GUI
     - obstacle / object with WHITE hole = already located
     - red dot = belief distribution
  
-1. check `agent.belief.py` <-- crucial for my last 5% of PF
+1. check `agent.belief.py`
     - check belief update and how it called in **solver**
     - object-oriented belief: one distribution (across the grid OR over/exclue some prior) per object
 
@@ -29,29 +30,33 @@
 # Note
 
 ## The problem
-Given: the position of obstacle (map layout), and list of target object (fixed set to have belief over)
+Given: 
+- list of obstacble object (can also give the position)
+- list of target object (fixed set to have belief over)
 
-Objective: Find the (x, y) location of **n** target object
+Objective: Find the (x, y) location of target object
 
 Solver: POUCT - not the original OO_POMCP
 
 ## POMDP Problem Structure
 
-### State space is W x L grid world, where s_t defined object-oriented state
+### Domain
+#### State space is W x L grid world, where s_t defined object-oriented state
 s = {robot_state, obj_1, obj_2, obj_3, obj_n}
+- each object has attributes: id, type, pose (x,y), found (T/F)
 
-
-### Action
+#### Action
 - Motion
     - by default: scheme 3 (vx,vy)
 - Look: Receive observation
 - Find
 
-### Transition model
-- all action assumed to be deterministic
-- **STATIC** environment
+#### Observation: fan-shape sensing region V x {NULL}
 
-### Observation
+### Model - defined same as [paper OO_MOS ICRA2019](https://www.khoury.northeastern.edu/home/lsw/papers/icra2019-mop.pdf) 
+#### Transition model - determinstic
+
+#### Observation
 Defined in `env.env.py`
 
 - return example: ```MosOOObservation({4: None, 6: (9, 3), 9: None, 11: None, 12: None})```
