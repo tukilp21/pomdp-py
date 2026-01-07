@@ -1,33 +1,25 @@
 # To do
 
-1. identify S,A,O,T,Z,R,b - then see which of these i will need to change to fit my problem
 
-1. understand the GUI
-    - obstacle / object with WHITE hole = already located
-    - red dot = belief distribution
- 
 1. check `agent.belief.py`
     - check belief update and how it called in **solver**
     - object-oriented belief: one distribution (across the grid OR over/exclue some prior) per object
 
-1. `observation_model_py` looks complicated 
-    - my intuition: to model/define, especially on in-domain simplifying assumption, so that belief update can be simply *bayesian update* (as stated in `agent/belief.py`)
 
-1. play around with `class StaticObjectTransitionModel(pomdp_py.TransitionModel)`
+# My note 
 
-# Bug 
-
-## To fix / add
+## To do
+- `vis` >>> draw_belief >>> utils.lighter: is the idea is to illustrate the belief as a heatmap?
 - sensor define with *occlusion True* but still looks through wall (tested on world 1, the agent chooses *look* east from the start). from Coplit:
     - Obstacles are NOT included in sensor observation?? check `env.env`
     - `models/components/sensor.py` line 224-251, 211-221
-    - 
-- `agent_has_map=False` <-- help the agent avoid collision, but no Penalty applied yet
+- `agent_has_map=False` <-- help the agent avoid collision, but no Penalty for collision applied yet
 
 ## Fixed
 - `_build_beam_map`, `observe`
 
-# Note
+
+# Overview
 
 ## The problem
 Given: 
@@ -36,7 +28,7 @@ Given:
 
 Objective: Find the (x, y) location of target object
 
-Solver: POUCT - not the original OO_POMCP
+Solver: POUCT (not the original OO-POMCP) with Histogram as belief representation
 
 ## POMDP Problem Structure
 
@@ -70,16 +62,13 @@ Defined in `env.env.py`
 ## Belief (`agent/belief.py`)
 - `initialize_belief()`
     -   A mapping {(objid|robot_id) -> {(x,y) -> [0,1]}}
+    -   (by default) uniformly distributed as a historgram
 - prior 
     - *line 62, 80* check `class MosOOPOMDP(pomdp_py.OOPOMDP)` in `problem.py`, 
 
 - `belief_update()` in `problem.py`
-    - in practice: intractable to obtain s'
-    - simplifying assumption: object is contained within one pixel (or voxel), so Observation ~ Labelling
+    - simplifying assumption: object is contained within one pixel (or voxel), so Observation ~ Labelling each cell as OBJ or FREE
 
-- **`solve()`**
-    - **Line 209** select solver based on Belief repr.
-    - **Line 276** call `belief_update()`
 
 ```
 agent = pomdp_py.Agent(init_belief,
