@@ -6,26 +6,41 @@ import numpy as np
 
 
 class State(pomdp_py.State):
-    """The state of the problem is just the robot position"""
+    """The state of the maze problem is the robot's position and orientation."""
 
-    def __init__(self, positition, orientation):
+    ORIENTATIONS = ["North", "East", "South", "West"]  # 0, 1, 2, 3
+
+    def __init__(self, position, orientation):
         """
-        Initializes a state in light dark domain.
+        Initializes a state in the maze domain.
 
         Args:
-            position (tuple): position of the robot.
+            position (tuple): position of the robot (x, y).
+            orientation (str or int): orientation of the robot.
+                Can be "North"/"East"/"South"/"West" or 0/1/2/3
         """
         if len(position) != 2:
-            raise ValueError("State position must be a vector of length 2")
-        self.position = positition
-        self.orientation = orientation
+            raise ValueError("State position must be a tuple of length 2")
+        self.position = position
+        
+        # Normalize orientation
+        if isinstance(orientation, str):
+            if orientation not in self.ORIENTATIONS:
+                raise ValueError(f"Invalid orientation: {orientation}")
+            self.orientation = orientation
+        elif isinstance(orientation, int):
+            if orientation not in [0, 1, 2, 3]:
+                raise ValueError(f"Invalid orientation index: {orientation}")
+            self.orientation = self.ORIENTATIONS[orientation]
+        else:
+            raise ValueError("Orientation must be a string or int")
 
     def __hash__(self):
-        return hash(self.position, self.orientation)
+        return hash((self.position, self.orientation))
 
     def __eq__(self, other):
         if isinstance(other, State):
-            return self.position == other.position
+            return self.position == other.position and self.orientation == other.orientation
         else:
             return False
 
@@ -33,4 +48,4 @@ class State(pomdp_py.State):
         return self.__repr__()
 
     def __repr__(self):
-        return "State(%s)" % (str(self.position, self.orientation))
+        return "State(%s, %s)" % (str(self.position), self.orientation)
