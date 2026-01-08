@@ -1,11 +1,3 @@
-# To do
-
-
-1. check `agent.belief.py`
-    - check belief update and how it called in **solver**
-    - object-oriented belief: one distribution (across the grid OR over/exclue some prior) per object
-
-
 # My note 
 
 ## To do
