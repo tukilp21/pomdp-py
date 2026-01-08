@@ -216,6 +216,9 @@ def solve(
         visualize (bool) if True, show the pygame visualization.
     """
 
+    ##################################
+    # Choose planner based on the belief representation
+    ##################################
     random_objid = random.sample(sorted(problem.env.target_objects), 1)[0]
     random_object_belief = problem.agent.belief.object_beliefs[random_objid]
     if isinstance(random_object_belief, pomdp_py.Histogram):
@@ -239,8 +242,11 @@ def solve(
     else:
         raise ValueError(
             "Unsupported object belief type %s" % str(type(random_object_belief))
-        )
+        )observation
 
+    ##################################
+    # Init
+    ##################################
     robot_id = problem.agent.robot_id
     if visualize:
         viz = MosViz(
@@ -255,6 +261,7 @@ def solve(
     _find_actions_count = 0
     _total_reward = 0  # total, undiscounted reward
     for i in range(max_steps):
+
         # Plan action
         _start = time.time()
         real_action = planner.plan(problem.agent)
@@ -303,9 +310,9 @@ def solve(
             # according to observation model.
             robot_pose = problem.env.state.object_states[robot_id].pose
             viz_observation = MosOOObservation({})
-            if isinstance(real_action, LookAction) or isinstance(
-                real_action, FindAction
-            ):
+            if isinstance(real_action, LookAction) or isinstance(real_action, FindAction):
+                # return objposes (x,y) of whatever in the sensing range
+                #   - include obstacles (named 100X) and target object (X)
                 viz_observation = problem.env.sensors[robot_id].observe(
                     robot_pose, problem.env.state
                 )
@@ -349,14 +356,15 @@ def unittest():
     # create the world
     grid_map, robot_char = random_world(10, 10, 5, 10) # random world
 
-    from pomdp_py.problems.multi_object_search.example_worlds import world1, world2, world3
+    from pomdp_py.problems.multi_object_search.example_worlds import world1, world2, world3, world11
     '''NOTE:
-    world 1: 
+    world 1: small grid, 2 objects
+    world 11: small grid, 1 object
     world 2: Used to test the shape of the sensor
     world 3: Used to test sensor occlusion
     '''
     
-    grid_map, robot_char = world1
+    grid_map, robot_char = world11
 
     # define sensor
     '''
@@ -379,8 +387,11 @@ def unittest():
         # prior="informed",
         prior="uniform",
 
-
         agent_has_map=True, # <-- help the agent avoid collision, but no Penalty applied yet
+
+        ###### other default parameters
+        # belief_rep="histogram",
+        # num_particles=100,
     )
     solve(
         problem,
