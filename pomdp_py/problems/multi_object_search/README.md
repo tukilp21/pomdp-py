@@ -1,15 +1,24 @@
 # My note 
 
 ## To do
-- `vis` >>> draw_belief >>> utils.lighter: is the idea is to illustrate the belief as a heatmap?
 - sensor define with *occlusion True* but still looks through wall (tested on world 1, the agent chooses *look* east from the start). from Coplit:
-    - Obstacles are NOT included in sensor observation?? check `env.env`
     - `models/components/sensor.py` line 224-251, 211-221
-- `agent_has_map=False` <-- help the agent avoid collision, but no Penalty for collision applied yet
+
+- `agent_has_map`: for action sampling only - have not used to make belief update or planning better
+- observation model, `sample_zi()`
 
 ## Fixed
 - `_build_beam_map`, `observe`
 
+## Make it better
+- `vis` >>> draw_belief >>> utils.lighter: is the idea is to illustrate the belief as a heatmap?
+- still see through wall regardless of occlusion `model/components/sensor.py` check function `observe`. 
+    - testing look behaviour:
+    1. trye increase *solver's depth, planning_time, exploration_const*
+    1. reduce negative reward for look
+    - no hope... seem like whenever i set occlusion to True, it affect the *planning* which output almost NO *look* action. even when the agent goes into free space.
+    - *laser_sensor* also the same
+- for U shape occluded world3, POUCT seem to get stuck most of the time. Wonder if **POMCP** (not yet implemented properly) would perform better?
 
 # Overview
 

@@ -216,13 +216,14 @@ class PolicyModel(pomdp_py.RolloutPolicy):
     def sample(self, state):
         '''Pick an action uniformly'''
         return random.sample(self.get_all_actions(), 1)[0]
+    
+    def get_all_actions(self, state=None, history=None):
+        return PolicyModel.ACTIONS
 
     def rollout(self, state, history=None):
         """Treating this PolicyModel as a rollout policy"""
         return self.sample(state)
 
-    def get_all_actions(self, state=None, history=None):
-        return PolicyModel.ACTIONS
 
 
 ##################################################
@@ -251,27 +252,28 @@ class TigerProblem(pomdp_py.POMDP):
         super().__init__(agent, env, name="TigerProblem")
 
 
-    '''
-    NOTE: factory method (alternative constructor) that provides a simpler
-    '''
-    @staticmethod
-    def create(state="tiger-left", belief=0.5, obs_noise=0.15):
-        """
-        Args:
-            state (str): could be 'tiger-left' or 'tiger-right';
-                         True state of the environment
-            belief (float): Initial belief that the target is
-                            on the left; Between 0-1.
-            obs_noise (float): Noise for the observation
-                               model (default 0.15)
-        """
-        init_true_state = TigerState(state)
-        init_belief = pomdp_py.Histogram(
-            {TigerState("tiger-left"): belief, TigerState("tiger-right"): 1.0 - belief}
-        )
-        tiger_problem = TigerProblem(obs_noise, init_true_state, init_belief)
-        tiger_problem.agent.set_belief(init_belief, prior=True)
-        return tiger_problem
+    # '''
+    # NOTE: factory method - call without instantiating TigerProblem class
+    #           - similar to make_tiger() function below
+    # '''
+    # @staticmethod
+    # def create(state="tiger-left", belief=0.5, obs_noise=0.15):
+    #     """
+    #     Args:
+    #         state (str): could be 'tiger-left' or 'tiger-right';
+    #                      True state of the environment
+    #         belief (float): Initial belief that the target is
+    #                         on the left; Between 0-1.
+    #         obs_noise (float): Noise for the observation
+    #                            model (default 0.15)
+    #     """
+    #     init_true_state = TigerState(state)
+    #     init_belief = pomdp_py.Histogram(
+    #         {TigerState("tiger-left"): belief, TigerState("tiger-right"): 1.0 - belief}
+    #     )
+    #     tiger_problem = TigerProblem(obs_noise, init_true_state, init_belief)
+    #     tiger_problem.agent.set_belief(init_belief, prior=True)
+    #     return tiger_problem
 
 
 def make_tiger(noise=0.15, init_state="tiger-left", init_belief=[0.5, 0.5]):
@@ -341,7 +343,13 @@ def test_planner(tiger_problem, planner, nsteps=3, debug_tree=False):
         # environment state after action execution.
         real_observation = TigerObservation(tiger_problem.env.state.name)
         print(">> Observation:", real_observation)
+
         tiger_problem.agent.update_history(action, real_observation)
+
+        # print(tiger_problem.agent.history)
+        '''
+        NOTE: history is not used yet
+        '''
 
         # Update the belief. If the planner is POMCP, planner.update
         # also automatically updates agent belief.
@@ -364,6 +372,7 @@ def test_planner(tiger_problem, planner, nsteps=3, debug_tree=False):
             # Make it clearer to see what actions are taken
             # until every time door is opened.
             print("\n")
+            break
 
 
 def main():
@@ -374,9 +383,9 @@ def main():
     tiger = make_tiger(init_state=init_true_state)
     init_belief = tiger.agent.belief
 
-    print("** Testing value iteration **")
-    vi = pomdp_py.ValueIteration(horizon=3, discount_factor=0.95)
-    test_planner(tiger, vi, nsteps=3)
+    # print("** Testing value iteration **")
+    # vi = pomdp_py.ValueIteration(horizon=1, discount_factor=0.95)
+    # test_planner(tiger, vi, nsteps=10)
 
     print("\n** Testing POUCT **")
     pouct = pomdp_py.POUCT(

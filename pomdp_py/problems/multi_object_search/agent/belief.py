@@ -77,7 +77,7 @@ def initialize_belief(
         )
     elif representation == "particles":
         return _initialize_particles_belief(
-            dim, robot_id, object_ids, robot_orientations, num_particles=num_particles
+            dim, robot_id, object_ids, prior, robot_orientations, num_particles=num_particles
         )
     else:
         raise ValueError("Unsupported belief representation %s" % representation)

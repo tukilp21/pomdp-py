@@ -78,20 +78,46 @@ world3 = (
 ..xxxxxxxxxxxxx..
 ..xxxxxxxxxxxxx..
 ..xxxxxxxxxxxxx..
-..xxxTxxxxxxxxx..
 ..xxxxxxxxxxxxx..
-..xxxx...xxxxxx..
-..xxxx..xx.xxxx..
-..xxxx..r.Txxxx..
-..xxxx..xx.xxxx..
+..xxxxxxxxxxxxx..
+..xxx......xxxx..
+..xxx.xx.x.xxxx..
+..xxxT..rxTxxxx..
+..xxx.xxxx.xxxx..
+..xxx......xxxx..
 ..xxxxxx..xxxxx..
-..xxxxTx..xxxxx..
 ..xxxxxxxxxxxxx..
 ..xxxxxxxxxxxxx..
 ..xxxxxxxxxxxxx..
 ..xxxxxxxxxxxxx..
 ..xxxxxxxxxxxxx..
 .................
+.................
+""",
+    "r",
+)
+
+# Used to test sensor occlusion
+world4 = (
+    """
+.................
+.................
+..xxxxxxxxxxxxx..
+..xxxxxxxxxxxxx..
+..xxxxxxxxxxxxx..
+..xxxxxxxxxxxxx..
+..xxxxxxxxxxxxx..
+..xxxxxxxxxxxxx..
+..xxx......xxxx..
+..xxx.xx.x...xx..
+..x.....rx...xx..
+..x.Tx.......xx..
+..x..........xx..
+..x..........xx..
+..x......x...xx..
+..x......T...xx..
+..x..........xx..
+..xxxxxxxxxxxxx..
 .................
 """,
     "r",

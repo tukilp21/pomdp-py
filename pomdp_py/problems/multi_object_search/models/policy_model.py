@@ -27,16 +27,19 @@ class PolicyModel(pomdp_py.RolloutPolicy):
         raise NotImplementedError
 
     def get_all_actions(self, state=None, history=None):
-        """note: find can only happen after look."""
+        """note: Use history to check if LookAction was taken last, if yes, then there can be FindAction"""
         can_find = False
+        
         if history is not None and len(history) > 1:
             # last action
             last_action = history[-1][0]
             if isinstance(last_action, LookAction):
                 can_find = True
         find_action = [Find] if can_find else []
+
         if state is None:
             return ALL_MOTION_ACTIONS + [Look] + find_action
+        
         else:
             if self._grid_map is not None:
                 valid_motions = self._grid_map.valid_motions(

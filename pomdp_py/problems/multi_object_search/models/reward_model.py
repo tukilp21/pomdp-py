@@ -56,7 +56,7 @@ class GoalRewardModel(MosRewardModel):
         if isinstance(action, MotionAction):
             reward = reward - self.small - action.distance_cost
         elif isinstance(action, LookAction):
-            reward = reward - self.small
+            reward = reward - self.small * 0.5
         elif isinstance(action, FindAction):
             if state.object_states[robot_id]["camera_direction"] is None:
                 # The robot didn't look before detect. So nothing is in the field of view.
@@ -74,3 +74,5 @@ class GoalRewardModel(MosRewardModel):
                     # Has new detection. Award.
                     reward += self.big
         return reward
+
+

@@ -149,7 +149,7 @@ class MosViz:
         circle_drawn = {}  # map from pose to number of times drawn
 
         for objid in belief.object_beliefs:
-            if isinstance(belief.object_belief(objid).random(), RobotState):
+            if isinstance(belief.object_belief(objid).random(), RobotState): # only draw "target/obstacle" beliefs
                 continue
             hist = belief.object_belief(objid).get_histogram()
             color = target_colors[objid]

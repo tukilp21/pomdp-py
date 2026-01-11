@@ -13,6 +13,7 @@ from pomdp_py.problems.multi_object_search.models.components.grid_map import *
 import argparse
 import time
 import random
+from pomdp_py.problems.multi_object_search.models.components.plotting import plot_belief_heatmap
 
 
 class MosOOPOMDP(pomdp_py.OOPOMDP):
@@ -192,6 +193,16 @@ def belief_update(agent, real_action, real_observation, next_robot_state, planne
                 )
 
             agent.cur_belief.set_object_belief(objid, new_belief)
+            if objid != agent.robot_id:
+                hist = new_belief.get_histogram()
+                # print top 3 most likely object poses
+                print("Belief for object %s:" % str(objid))
+                # print(list(reversed(sorted(hist, key=hist.get))))
+                for state in list(reversed(sorted(hist, key=hist.get)))[:3]:
+                    print("  Pose: %s, Prob: %.4f" % (str(state["pose"]), hist[state]))
+
+                    # plot_belief_heatmap(hist, objid)
+
 
 
 ### Solve the problem with POUCT/POMCP planner ###
@@ -224,12 +235,13 @@ def solve(
     if isinstance(random_object_belief, pomdp_py.Histogram):
         # Use POUCT
         planner = pomdp_py.POUCT(
-            max_depth=max_depth,
+            max_depth=20,              # Increase from 10 → helps evaluate Look benefits
             discount_factor=discount_factor,
-            planning_time=planning_time,
-            exploration_const=exploration_const,
+            planning_time=2.0,         # Increase from 1.0 → more time to explore Look
+            exploration_const=1000,    # higher ~ aggressive exploration
             rollout_policy=problem.agent.policy_model,
         )  # Random by default
+
     elif isinstance(random_object_belief, pomdp_py.Particles):
         # Use POMCP
         planner = pomdp_py.POMCP(
@@ -242,7 +254,7 @@ def solve(
     else:
         raise ValueError(
             "Unsupported object belief type %s" % str(type(random_object_belief))
-        )observation
+        )
 
     ##################################
     # Init
@@ -269,10 +281,18 @@ def solve(
         if _time_used > max_time:
             break  # no more time to update.
 
+        print("==== Step %d ====" % (i + 1))
+        print("Action: %s" % str(real_action))
+
+        if str(real_action) == "look":
+            print("debug")
+
         # Execute action
         reward = problem.env.state_transition(
             real_action, execute=True, robot_id=robot_id
         )
+
+        print("Reward: %s" % str(reward))
 
         # Receive observation
         _start = time.time()
@@ -280,8 +300,20 @@ def solve(
             problem.agent.observation_model, real_action
         )
 
+
+        print("Observation: %s" % str(real_observation))
+
+
+        #######################
         # Updates
-        problem.agent.clear_history()  # truncate history
+        #######################
+        
+        # NOTE: debug
+        # print(problem.agent.history)
+
+        problem.agent.clear_history()  # truncate history - still not sure what is this used for
+
+        # print(problem.agent.history)
         problem.agent.update_history(real_action, real_observation)
         belief_update(
             problem.agent,
@@ -292,16 +324,16 @@ def solve(
         )
         _time_used += time.time() - _start
 
+
         # Info and render
         _total_reward += reward
         if isinstance(real_action, FindAction):
             _find_actions_count += 1
-        print("==== Step %d ====" % (i + 1))
-        print("Action: %s" % str(real_action))
-        print("Observation: %s" % str(real_observation))
-        print("Reward: %s" % str(reward))
+
         print("Reward (Cumulative): %s" % str(_total_reward))
         print("Find Actions Count: %d" % _find_actions_count)
+
+
         if isinstance(planner, pomdp_py.POUCT):
             print("__num_sims__: %d" % planner.last_num_sims)
 
@@ -328,7 +360,6 @@ def solve(
             # time.sleep(0.2)
 
             if str(real_action) == "look" or str(real_action).startswith("find"):
-                # time.sleep(1.0)  # pause to show the found object
                 input("Press Enter to continue...")
         
 
@@ -345,10 +376,10 @@ def solve(
         #     print("FindAction limit reached.")
         #     input("Press Enter to continue...")
         #     break
-        if _time_used > max_time:
-            print("Maximum time reached.")
-            input("Press Enter to continue...")
-            break
+        # if _time_used > max_time:
+        #     print("Maximum time reached.")
+        #     input("Press Enter to continue...")
+        #     break
 
 
 # Test
@@ -356,15 +387,16 @@ def unittest():
     # create the world
     grid_map, robot_char = random_world(10, 10, 5, 10) # random world
 
-    from pomdp_py.problems.multi_object_search.example_worlds import world1, world2, world3, world11
+    from pomdp_py.problems.multi_object_search.example_worlds import world1, world2, world3, world11, world4
     '''NOTE:
     world 1: small grid, 2 objects
     world 11: small grid, 1 object
     world 2: Used to test the shape of the sensor
     world 3: Used to test sensor occlusion
+    world 4: Super open world
     '''
     
-    grid_map, robot_char = world11
+    grid_map, robot_char = world3
 
     # define sensor
     '''
@@ -374,23 +406,29 @@ def unittest():
     proximity:
         - omnidirectional
     '''
-    # laserstr = make_laser_sensor(90, (1, 4), 0.05, True)
-    proxstr = make_proximity_sensor(2, False)
+    laserstr = make_laser_sensor(90, (1, 3), 0.05, True)
+    # proxstr = make_proximity_sensor(2, False)
     
     problem = MosOOPOMDP(
         robot_char,  # r is the robot character
-        sigma=0.05,  # observation model parameter
-        epsilon=0.95,  # observation model parameter
         grid_map=grid_map,
+        sigma=0.05,  # <> covar of Gaus dis. higher = greater uncertainty "spread" ~ less reliable observations
+        epsilon=1,  # <> accuracy of sensor. higher = more false positive (noise)
 
-        sensors={robot_char: proxstr},
-        # prior="informed",
+        # perfect sensor
+        # sigma=0,
+        # epsilon=1,
+
+
+        sensors={robot_char: laserstr},
+        
         prior="uniform",
 
-        agent_has_map=True, # <-- help the agent avoid collision, but no Penalty applied yet
+        agent_has_map=True, # <-- just for select non-collision actions
 
-        ###### other default parameters
-        # belief_rep="histogram",
+        # TODO: to implement
+        ###### parameters to use POMCP solver 
+        # belief_rep="particles",
         # num_particles=100,
     )
     solve(
